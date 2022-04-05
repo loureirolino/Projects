@@ -18,13 +18,7 @@ import pandas as pd
 path = '/home/lucas/Downloads/'
 name_df = 'rice_wheat_corn_prices.csv'
 
-sheets_names = ['12 Nov', '13 Nov', '14 Nov']
-col_names = ['time', 'chassis', 'laps', 'slick_rain', 'psi_fl', 'psi_fr', 'psi_rl', 'psi_rr',
-             'obs', 'bar_fl', 'bar_fr', 'bar_rl', 'bar_rr', 'final_position', 'use_type']
-
-for i in range(len(sheets_names)):
-    globals()['df_%s' % i] = pd.read_excel(path + name_df, sheet_name = sheets_names[i], skiprows = 28,  usecols= 'A:O')
-    globals()['df_%s' % i].columns = col_names
+df = pd.read_csv(path + name_df)
 
 
 ###
@@ -94,6 +88,50 @@ sidebar = html.Div(
 
 ###
 # Page Component - Buttons
+
+
+###
+# Page Component - Control Panel + Graphics
+controls = dbc.Card(
+    [
+        
+        html.Div(
+            [
+                dbc.Label("Variavel de Análise"),
+                dcc.Dropdown(
+                    id="variable",
+                    options=[
+                        {"label": col, "value": col} for col in df.columns[2:]
+                    ],
+                    value="sepal width (cm)",
+                ),
+            ]
+        ),
+        html.Div(
+            [
+                dbc.Label("Cluster count"),
+                dbc.Input(id="cluster-count", type="number", value=3),
+            ]
+        ),
+    ],
+    body=True,
+)
+
+graph.layout = dbc.Container(
+    [
+        html.H1("Iris k-means clustering"),
+        html.Hr(),
+        dbc.Row(
+            [
+                dbc.Col(controls, md=4),
+                dbc.Col(dcc.Graph(id="cluster-graph"), md=8),
+            ],
+            align="center",
+        ),
+    ],
+    fluid=True,
+)
+
 
 
 ###
@@ -168,6 +206,7 @@ def render_page_content(pathname):
             
                 html.H1('Page 1'),
                 html.P("This is the content of page 1!")
+                graph.layout
             
         ]
     elif pathname == "/page-2":
@@ -202,6 +241,50 @@ def switch_tab(at):
     elif at == "tab-2":
         return tab2_content
     return html.P("This shouldn't ever be displayed...")
+
+
+
+@app.callback(
+    Output("cluster-graph", "figure"),
+    [
+        Input("variable", "value"),
+        Input("cluster-count", "value"),
+    ],
+)
+def make_graph(x, y, n_clusters):
+    # minimal input validation, make sure there's at least one cluster
+    km = KMeans(n_clusters=max(n_clusters, 1))
+    df = iris.loc[:, [0, y]]
+    km.fit(df.values)
+    df["cluster"] = km.labels_
+
+    centers = km.cluster_centers_
+
+    data = [
+        go.Scatter(
+            x=df.loc[df.cluster == c, x],
+            y=df.loc[df.cluster == c, y],
+            mode="markers",
+            marker={"size": 8},
+            name="Cluster {}".format(c),
+        )
+        for c in range(n_clusters)
+    ]
+
+    data.append(
+        go.Scatter(
+            x=centers[:, 0],
+            y=centers[:, 1],
+            mode="markers",
+            marker={"color": "#000", "size": 12, "symbol": "diamond"},
+            name="Cluster centers",
+        )
+    )
+
+    layout = {"xaxis": {"title": x}, "yaxis": {"title": y}}
+
+    return go.Figure(data=data, layout=layout)
+
 
     
 ###
