@@ -20,33 +20,25 @@ name_df = 'rice_wheat_corn_prices.csv'
 
 df = pd.read_csv(path + name_df)
 
-new_month = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-             'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
-old_month = ['Jan','Feb', 'Mar', 'Apr', 'May', 'Jun',
-             'Jul', 'Aug', 'Sep', 'Oct','Nov', 'Dec']
-
-df.Month = df.Month.replace(old_month, new_month)
-
 
 ###
 # Page Component - Navbar
 
 navbar = dbc.NavbarSimple(
     children=[
-        dbc.NavItem(dbc.NavLink("Página Inicial", href="/")),
+        dbc.NavItem(dbc.NavLink("Home", href="/")),
         dbc.DropdownMenu(
             children=[
-                dbc.DropdownMenuItem("Mais páginas", header=True),
-                dbc.DropdownMenuItem("Série Histórica", href="/page-1"),
-                dbc.DropdownMenuItem("Sobre", href="/page-2"),
-                #dbc.DropdownMenuItem("Algo Mais", href="/page-3"),
+                dbc.DropdownMenuItem("More pages", header=True),
+                dbc.DropdownMenuItem("Page 1", href="/page-1"),
+                dbc.DropdownMenuItem("Page 2", href="/page-2"),
             ],
             nav=True,
             in_navbar=True,
-            label="Mais",
+            label="More",
         ),
     ],
-    brand="Variação dos Preços dos Seriais ao longo dos últimos 30 anos",
+    brand="NavbarSimple - Name",
     brand_href="#",
     color="primary",
     dark=True,
@@ -75,17 +67,16 @@ CONTENT_STYLE = {
 
 sidebar = html.Div(
     [
-        html.H2("Projeto APC", className="display-4"),
+        html.H2("Sidebar", className="display-4"),
         html.Hr(),
         html.P(
-            "Categorias", className="lead"
+            "A simple sidebar layout with navigation links", className="lead"
         ),
         dbc.Nav(
             [
-                dbc.NavLink("Página Inicial", href="/", active="exact"),
-                dbc.NavLink("Série Histórica", href="/page-1", active="exact"),
-                dbc.NavLink("Sobre", href="/page-2", active="exact"),
-                #dbc.NavLink("Algo mais", href="/page-3", active="exact"),
+                dbc.NavLink("Home", href="/", active="exact"),
+                dbc.NavLink("Page 1", href="/page-1", active="exact"),
+                dbc.NavLink("Page 2", href="/page-2", active="exact"),
             ],
             vertical=True,
             pills=True,
@@ -93,11 +84,6 @@ sidebar = html.Div(
     ],
     style=SIDEBAR_STYLE,
 )
-
-
-###
-# Page Component - Buttons
-
 
 ###
 # Page Component - Control Panel + Graphics
@@ -112,7 +98,7 @@ controls = dbc.Card(
                     options=[
                         {"label": col, "value": col} for col in df.columns[2:]
                     ],
-                    value="Price_rice_ton",
+                    value="Valores em Toneladas",
                 ),
             ]
         ),
@@ -123,25 +109,30 @@ controls = dbc.Card(
                 dcc.Dropdown(
                     id="variable_x",
                     options=[
-                        {"label": entrie, "value": entrie} for entrie in df.Year.unique()    
+                        {"label": col, "value": col} for col in df.columns[2:]
                     ],
-                    value=2019,
+                    value="Ano de Análise",
                 ),
             ]
         ),
-        
+        html.Div(
+            [
+                dbc.Label("Cluster count"),
+                dbc.Input(id="cluster-count", type="number", value=3),
+            ]
+        ),
     ],
     body=True,
 )
 
 graph = dbc.Container(
     [
-        html.H1("Séries Históricas"),
+        html.H1("Iris k-means clustering"),
         html.Hr(),
         dbc.Row(
             [
                 dbc.Col(controls, md=4),
-                dcc.Graph(id="series-graph"),
+                dbc.Col(dcc.Graph(id="cluster-graph"), md=8),
             ],
             align="center",
         ),
@@ -221,19 +212,16 @@ def render_page_content(pathname):
     if pathname in ["/", "/page-1"]:
         return [
             
+                html.H1('Page 1'),
+                html.P("This is the content of page 1!"),
                 graph
             
         ]
     elif pathname == "/page-2":
         return [
             
-                html.H1("Informações sobre o dataset"),
-                dcc.Markdown('''
-                    
-
-
-                    Fonte: <https://www.kaggle.com/datasets/timmofeyy/-cerial-prices-changes-within-last-30-years>
-                    ''')
+                html.H1('Page 2'),
+                html.P("This is the content of page 2!")
             
         ]
     elif pathname == "/page-3":
@@ -265,36 +253,46 @@ def switch_tab(at):
 
 
 @app.callback(
-    Output("series-graph", "figure"),
+    Output("cluster-graph", "figure"),
     [
         Input("variable_x", "value"),
         Input("variable_y", "value"),
+        Input("cluster-count", "value"),
     ],
 )
-def make_graph(x, y):
-    
-    df_copy = df.copy()
-    df_copy = df_copy[(df_copy.Year == x)]
-    cols = ['Year', 'Month', y]
-    df_copy[df_copy.columns & cols]
+def make_graph(x, y, n_clusters):
+    # minimal input validation, make sure there's at least one cluster
+    km = KMeans(n_clusters=max(n_clusters, 1))
+    df = iris.loc[:, [0, y]]
+    km.fit(df.values)
+    df["cluster"] = km.labels_
 
-   
-    fig = px.line(
-            df_copy,
-            x = 'Month',
-            y = y,
-            markers = True,
-            labels = {'Price_wheat_ton':'Preço em US$ para a <br> tonelade de trigo',
-                    'Price_rice_ton' : 'Preço em US$ para a <br> tonelade de arroz',
-                    'Price_corn_ton' : 'Preço em US$ para a <br> tonelade de milho',
-                    'Inflation_rate': 'Taxa de inflação <br> (ano base = 1992',
-                    'Price_wheat_ton_infl' : 'Preço em US$ para a <br> tonelade de trigo (corrigo pela inflação',
-                    'Price_rice_ton_infl' : 'Preço em US$ para a <br> tonelade de arroz (corrigo pela inflação)',
-                    'Price_corn_ton_infl' : 'Preço em US$ para a <br> tonelade de milho (corrigo pela inflação)',
-                    'Month' : 'Mês de Análise'})
-                    
+    centers = km.cluster_centers_
 
-    return fig
+    data = [
+        go.Scatter(
+            x=df.loc[df.cluster == c, x],
+            y=df.loc[df.cluster == c, y],
+            mode="markers",
+            marker={"size": 8},
+            name="Cluster {}".format(c),
+        )
+        for c in range(n_clusters)
+    ]
+
+    data.append(
+        go.Scatter(
+            x=centers[:, 0],
+            y=centers[:, 1],
+            mode="markers",
+            marker={"color": "#000", "size": 12, "symbol": "diamond"},
+            name="Cluster centers",
+        )
+    )
+
+    layout = {"xaxis": {"title": x}, "yaxis": {"title": y}}
+
+    return go.Figure(data=data, layout=layout)
 
 
     
