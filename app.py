@@ -15,10 +15,9 @@ import pandas as pd
 
 ###
 # Data
-path = '/home/lucas/Downloads/'
-name_df = 'rice_wheat_corn_prices.csv'
+url ='https://raw.githubusercontent.com/loureirolino/Projects/master/rice_wheat_corn_prices.csv'
 
-df = pd.read_csv(path + name_df)
+df = pd.read_csv(url)
 
 new_month = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
              'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
@@ -30,7 +29,6 @@ df.Month = df.Month.replace(old_month, new_month)
 
 ###
 # Page Component - Navbar
-
 navbar = dbc.NavbarSimple(
     children=[
         dbc.NavItem(dbc.NavLink("Página Inicial", href="/")),
@@ -38,15 +36,16 @@ navbar = dbc.NavbarSimple(
             children=[
                 dbc.DropdownMenuItem("Mais páginas", header=True),
                 dbc.DropdownMenuItem("Série Histórica", href="/page-1"),
-                dbc.DropdownMenuItem("Sobre", href="/page-2"),
-                #dbc.DropdownMenuItem("Algo Mais", href="/page-3"),
+                dbc.DropdownMenuItem("Boxplot", href="/page-2"),
+                dbc.DropdownMenuItem("Histograma", href="/page-3"),
+                dbc.DropdownMenuItem("Sobre", href="/page-4"),
             ],
             nav=True,
             in_navbar=True,
             label="Mais",
         ),
     ],
-    brand="Variação dos Preços dos Seriais ao longo dos últimos 30 anos",
+    brand="Navbar",
     brand_href="#",
     color="primary",
     dark=True,
@@ -54,8 +53,6 @@ navbar = dbc.NavbarSimple(
 
 ###
 # Page Component - Sidebar
-
-# the style arguments for the sidebar. We use position:fixed and a fixed width
 SIDEBAR_STYLE = {
     #"position": "fixed",
     "top": 0,
@@ -66,7 +63,6 @@ SIDEBAR_STYLE = {
     "background-color": "#f8f9fa",
 }
 
-
 CONTENT_STYLE = {
     "margin-left": "18rem",
     "margin-right": "2rem",
@@ -75,7 +71,7 @@ CONTENT_STYLE = {
 
 sidebar = html.Div(
     [
-        html.H2("Projeto APC", className="display-4"),
+        html.H2("Sidebar", className="display-4"),
         html.Hr(),
         html.P(
             "Categorias", className="lead"
@@ -84,8 +80,9 @@ sidebar = html.Div(
             [
                 dbc.NavLink("Página Inicial", href="/", active="exact"),
                 dbc.NavLink("Série Histórica", href="/page-1", active="exact"),
-                dbc.NavLink("Sobre", href="/page-2", active="exact"),
-                #dbc.NavLink("Algo mais", href="/page-3", active="exact"),
+                dbc.NavLink("Boxplot", href="/page-2", active="exact"),
+                dbc.NavLink("Histograma", href="/page-3", active="exact"),
+                dbc.NavLink("Sobre", href="/page-4", active="exact"),
             ],
             vertical=True,
             pills=True,
@@ -100,15 +97,34 @@ sidebar = html.Div(
 
 
 ###
-# Page Component - Control Panel + Graphics
-controls = dbc.Card(
+# Page Home (hello)
+hello = dbc.Container(
+    [
+        html.H1("Variação dos Preços dos Cereais ao longo dos últimos 30 anos"),
+        html.Br(),
+        dcc.Markdown('''            
+        ## Projeto Final de APC - 2021.2  \
+                
+        ### Universidade de Brasília - Departamento de Ciência da Computação
+                    '''),
+        html.Br(),
+        dcc.Markdown(''' 
+        ### Alunos:
+        * Lucas Loureiro Lino da Costa
+                    ''' )
+    ]
+)
+
+###
+# Page 1 (time series) - Control Panel + Graphics
+controls_1 = dbc.Card(
     [
         
         html.Div(
             [
                 dbc.Label("Variavel de Análise"),
                 dcc.Dropdown(
-                    id="variable_y",
+                    id="variable_y_1",
                     options=[
                         {"label": col, "value": col} for col in df.columns[2:]
                     ],
@@ -121,7 +137,7 @@ controls = dbc.Card(
             [
                 dbc.Label("Ano de Análise"),
                 dcc.Dropdown(
-                    id="variable_x",
+                    id="variable_x_1",
                     options=[
                         {"label": entrie, "value": entrie} for entrie in df.Year.unique()    
                     ],
@@ -134,13 +150,13 @@ controls = dbc.Card(
     body=True,
 )
 
-graph = dbc.Container(
+graph_1 = dbc.Container(
     [
         html.H1("Séries Históricas"),
         html.Hr(),
         dbc.Row(
             [
-                dbc.Col(controls, md=4),
+                dbc.Col(controls_1, md=4),
                 dcc.Graph(id="series-graph"),
             ],
             align="center",
@@ -150,22 +166,108 @@ graph = dbc.Container(
 )
 
 
+###
+# Page 2 (boxplot) - Control Panel + Graphics
+controls_2 = dbc.Card(
+    [
+        
+        html.Div(
+            [
+                dbc.Label("Ano de Análise"),
+                dcc.Dropdown(
+                    id="variable_x_2",
+                    options=[
+                        {"label": entrie, "value": entrie} for entrie in df.Year.unique() 
+                    ],
+                    value=2019,
+                ),
+            ]
+        ),
+    ],
+    body=True,
+)
+
+graph_2 = dbc.Container(
+    [
+        html.H1("Boxplot"),
+        html.Hr(),
+        dbc.Row(
+            [
+                dbc.Col(controls_2, md=4),
+                dcc.Graph(id="boxplot-graph"),
+            ],
+            align="center",
+        ),
+    ],
+    fluid=True,
+)
+
+
+###
+# Page 3 (histogram) - Control Panel + Graphics
+controls_3 = dbc.Card(
+    [
+        
+        html.Div(
+            [
+                dbc.Label("Ano de Análise"),
+                dcc.Dropdown(
+                    id="variable_x_3",
+                    options=[
+                        {"label": entrie, "value": entrie} for entrie in df.Year.unique() 
+                    ],
+                    value=2019,
+                ),
+            ]
+        ),
+    ],
+    body=True,
+)
+
+graph_3 = dbc.Container(
+    [
+        html.H1("Histograma"),
+        html.Hr(),
+        dbc.Row(
+            [
+                dbc.Col(controls_3, md=4),
+                dcc.Graph(id="histogram-graph"),
+            ],
+            align="center",
+        ),
+    ],
+    fluid=True,
+)
+
+
+###
+# Page 4 (About)
+about = dbc.Container(
+    [
+        html.H1("Informações sobre o dataset"),
+        dcc.Markdown('''            
+        Fonte: <https://www.kaggle.com/datasets/timmofeyy/-cerial-prices-changes-within-last-30-years>
+                    '''),
+    ]
+)
 
 ###
 # page Component - Tabs
-tabs = html.Div(
-    [
-        dbc.Tabs(
-            [
-                dbc.Tab(label="Tab 1", tab_id="tab-1"),
-                dbc.Tab(label="Tab 2", tab_id="tab-2"),
-            ],
-            id="tabs",
-            active_tab="tab-1",
-        ),
-        html.Div(id="content"),
-    ]
-)
+#tabs = html.Div(
+#    [
+#        dbc.Tabs(
+#            [
+#                dbc.Tab(label="Tab 1", tab_id="tab-1"),
+#                dbc.Tab(label="Tab 2", tab_id="tab-2"),
+#            ],
+#            id="tabs",
+#            active_tab="tab-1",
+#        ),
+#        html.Div(id="content"),
+#    ]
+#)
+
+
 
 
 ###
@@ -173,13 +275,11 @@ tabs = html.Div(
 
 # Core Struture
 app = dash.Dash(
-    __name__, external_stylesheets = [dbc.themes.BOOTSTRAP],title = "Nome do App"
+    __name__, external_stylesheets = [dbc.themes.BOOTSTRAP],title = "painel_grupo_10"
 )
 
 server = app.server
 
-# the styles for the main content position it to the right of the sidebar and
-# add some padding.
 CONTENT_STYLE = {
     "margin-right": "2rem",
     "padding": "2rem 1rem",
@@ -198,7 +298,7 @@ app.layout = html.Div(
                  sidebar,
                  dbc.Col(
                     [
-                        tabs,
+                        #tabs,
                         content,
                     ]
                 
@@ -214,33 +314,39 @@ app.layout = html.Div(
 ###
 # Callbacks
 
+# Page redirections
 @app.callback(
     Output("page-content", "children"),
     [Input("url", "pathname")])
 def render_page_content(pathname):
-    if pathname in ["/", "/page-1"]:
+    if pathname == "/":
         return [
             
-                graph
+                hello
+            
+        ]
+    if pathname == "/page-1":
+        return [
+            
+                graph_1
             
         ]
     elif pathname == "/page-2":
         return [
             
-                html.H1("Informações sobre o dataset"),
-                dcc.Markdown('''
-                    
-
-
-                    Fonte: <https://www.kaggle.com/datasets/timmofeyy/-cerial-prices-changes-within-last-30-years>
-                    ''')
+                graph_2
             
         ]
     elif pathname == "/page-3":
         return [
             
-                html.H1('Page 3'),
-                html.P("This is the content of page 3!")
+                graph_3
+            
+        ]
+    elif pathname == "/page-4":
+        return [
+            
+                about
             
         ]
     # If the user tries to reach a different page, return a 404 message
@@ -252,23 +358,23 @@ def render_page_content(pathname):
         ]
     )
 
-@app.callback(
-    Output("content", "children"),
-    [Input("tabs", "active_tab")])
-def switch_tab(at):
-    if at == "tab-1":
-        return tab1_content
-    elif at == "tab-2":
-        return tab2_content
-    return html.P("This shouldn't ever be displayed...")
+#@app.callback(
+#    Output("content", "children"),
+#    [Input("tabs", "active_tab")])
+#def switch_tab(at):
+#    if at == "tab-1":
+#        return tab1_content
+#    elif at == "tab-2":
+#        return tab2_content
+#    return html.P("This shouldn't ever be displayed...")
 
 
-
+# Page 1 - graphic output
 @app.callback(
     Output("series-graph", "figure"),
     [
-        Input("variable_x", "value"),
-        Input("variable_y", "value"),
+        Input("variable_x_1", "value"),
+        Input("variable_y_1", "value"),
     ],
 )
 def make_graph(x, y):
@@ -276,35 +382,83 @@ def make_graph(x, y):
     df_copy = df.copy()
     df_copy = df_copy[(df_copy.Year == x)]
     cols = ['Year', 'Month', y]
-
-    #Opt. 1
+    
+    
+    # Option 1
+    #df_copy = df_copy[df_copy.columns.intersection(cols)]
+    
+    # Option 2
+    #df_copy = df_copy[df_copy.columns & cols]
+    
+    # Option 3
     data = []
     for col in cols:
         data.append(list(df_copy[col]))
     df_copy = pd.DataFrame({cols[i]: data[i] for i in range(3)})
-       
 
-    #Opt.2
-    #df_copy[df_copy.columns & cols]
 
-   
     fig = px.line(
             df_copy,
             x = 'Month',
             y = y,
             markers = True,
-            labels = {'Price_wheat_ton':'Preço em US$ para a <br> tonelade de trigo',
-                    'Price_rice_ton' : 'Preço em US$ para a <br> tonelade de arroz',
-                    'Price_corn_ton' : 'Preço em US$ para a <br> tonelade de milho',
-                    'Inflation_rate': 'Taxa de inflação <br> (ano base = 1992',
-                    'Price_wheat_ton_infl' : 'Preço em US$ para a <br> tonelade de trigo (corrigo pela inflação',
-                    'Price_rice_ton_infl' : 'Preço em US$ para a <br> tonelade de arroz (corrigo pela inflação)',
-                    'Price_corn_ton_infl' : 'Preço em US$ para a <br> tonelade de milho (corrigo pela inflação)',
-                    'Month' : 'Mês de Análise'})
+            labels = {'Price_wheat_ton':'Preço em US$ para a <br> tonelada de trigo',
+                    'Price_rice_ton' : 'Preço em US$ para a <br> tonelada de arroz',
+                    'Price_corn_ton' : 'Preço em US$ para a <br> tonelada de milho',
+                    'Inflation_rate': 'Taxa de inflação <br> (ano base = 1992)',
+                    'Price_wheat_ton_infl' : 'Preço em US$ para a <br> tonelada de trigo (corrigido pela inflação',
+                    'Price_rice_ton_infl' : 'Preço em US$ para a <br> tonelada de arroz (corrigido pela inflação)',
+                    'Price_corn_ton_infl' : 'Preço em US$ para a <br> tonelada de milho (corrigido pela inflação)',
+                    'Month' : 'Mês de Análise'}
+            )
                     
 
     return fig
 
+# Page 2 - graphic output
+@app.callback(
+    Output("boxplot-graph", "figure"),
+    [
+        Input("variable_x_2", "value")  
+    ],
+)
+def make_graph(x):
+    df_copy = df.copy()
+    df_copy = df_copy[(df_copy.Year == x)]
+    
+    df_copy = df_copy.drop(['Month', 'Inflation_rate'], axis = 1)
+    
+    legend_names = ['Preço em US$ para a <br> tonelada de trigo', 'Preço em US$ para a <br> tonelada de arroz',
+                    'Preço em US$ para a <br> tonelada de milho', 'Preço em US$ para a <br> tonelada de trigo (corrigido pela inflação',
+                    'Preço em US$ para a <br> tonelada de milho (corrigido pela inflação)']
+    
+    fig = go.Figure()
+    for col in df_copy.iloc[:, 1:]:
+        fig.add_trace(go.Box(y = df_copy[col].values,
+                             name = df_copy[col].name)
+                      )
+    fig.update(layout_xaxis_visible = False)
+    
+    return fig
+
+
+# Page 3 - graphic output
+@app.callback(
+    Output("histogram-graph", "figure"),
+    [
+        Input("variable_x_3", "value"),
+    ],
+)
+def make_graph(x):
+    df_copy = df.copy()
+    df_copy = df_copy[(df_copy.Year == x)]
+    
+    df_copy = df_copy.drop(['Month', 'Inflation_rate'], axis = 1)
+    
+       
+    fig = px.histogram(df_copy, x = 'Price_rice_ton')
+    
+    return fig
 
     
 ###
