@@ -48,7 +48,7 @@ navbar = dbc.NavbarSimple(
             align_end=True, 
         ),
     ],
-    brand="brand",
+    brand="Navbar",
     brand_href="#",
     color="dark",
     dark=True,
